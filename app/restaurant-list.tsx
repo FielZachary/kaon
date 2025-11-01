@@ -4,27 +4,28 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Mock data
 const allRestaurants = [
-  { id: '1', name: "Domino's", image: require('@/assets/images/icon.png'), category: 'Pizza' },
-  { id: '2', name: 'Burger King', image: require('@/assets/images/icon.png'), category: 'Burger' },
-  { id: '3', name: 'Donuts', image: require('@/assets/images/icon.png'), category: 'Dessert' },
-  { id: '4', name: 'Starbucks', image: require('@/assets/images/icon.png'), category: 'Cafe' },
-  { id: '5', name: 'Jollibee', image: require('@/assets/images/icon.png'), category: 'Filipino' },
-  { id: '6', name: 'KFC', image: require('@/assets/images/icon.png'), category: 'Chicken' },
+  { id: '1', name: "Domino's", image: { uri: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=400&fit=crop" }, category: 'Pizza' },
+  { id: '2', name: 'Burger King', image: { uri: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=400&fit=crop" }, category: 'Burger' },
+  { id: '3', name: 'Donuts', image: { uri: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=400&fit=crop" }, category: 'Dessert' },
+  { id: '4', name: 'Starbucks', image: { uri: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop" }, category: 'Cafe' },
+  { id: '5', name: 'Jollibee', image: { uri: "https://images.unsplash.com/photo-1580554530778-ca36943938b2?w=400&h=400&fit=crop" }, category: 'Filipino' },
+  { id: '6', name: 'KFC', image: { uri: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&h=400&fit=crop" }, category: 'Chicken' },
 ];
 
 export default function RestaurantListScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -59,7 +60,7 @@ export default function RestaurantListScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

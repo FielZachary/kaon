@@ -1,53 +1,62 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  Image,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Mock data
 const restaurantDetails = {
-  '1': {
+  "1": {
     name: "Domino's",
-    category: 'Pizza',
-    description: 'Delicious pizzas with fresh ingredients',
+    category: "Pizza",
+    description: "Delicious pizzas with fresh ingredients",
     rating: 4.5,
-    deliveryTime: '30-40 min',
-    image: require('@/assets/images/icon.png'),
+    deliveryTime: "30-40 min",
+    image: {
+      uri: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&h=600&fit=crop",
+    },
   },
-  '2': {
-    name: 'Burger King',
-    category: 'Burger',
-    description: 'Flame-grilled burgers and fast food favorites',
+  "2": {
+    name: "Burger King",
+    category: "Burger",
+    description: "Flame-grilled burgers and fast food favorites",
     rating: 4.3,
-    deliveryTime: '25-35 min',
-    image: require('@/assets/images/icon.png'),
+    deliveryTime: "25-35 min",
+    image: {
+      uri: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=600&fit=crop",
+    },
   },
-  '3': {
-    name: 'Donuts',
-    category: 'Dessert',
-    description: 'Fresh donuts and sweet treats',
+  "3": {
+    name: "Donuts",
+    category: "Dessert",
+    description: "Fresh donuts and sweet treats",
     rating: 4.7,
-    deliveryTime: '15-25 min',
-    image: require('@/assets/images/icon.png'),
+    deliveryTime: "15-25 min",
+    image: {
+      uri: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800&h=600&fit=crop",
+    },
   },
 };
 
 export default function RestaurantDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const restaurant = restaurantDetails[id as keyof typeof restaurantDetails] || restaurantDetails['1'];
+  const restaurant =
+    restaurantDetails[id as keyof typeof restaurantDetails] ||
+    restaurantDetails["1"];
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
@@ -59,7 +68,7 @@ export default function RestaurantDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -73,7 +82,7 @@ export default function RestaurantDetailScreen() {
         <View style={styles.infoSection}>
           <Text style={styles.restaurantName}>{restaurant.name}</Text>
           <Text style={styles.category}>{restaurant.category}</Text>
-          
+
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
               <Ionicons name="star" size={16} color="#FFB800" />
@@ -109,42 +118,42 @@ export default function RestaurantDetailScreen() {
           <Text style={styles.orderButtonText}>View Available Orders</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   backButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
-    fontFamily: 'Sen_700Bold',
+    fontFamily: "Sen_700Bold",
     fontSize: 18,
-    color: '#474141',
+    color: "#474141",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   favoriteButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -153,102 +162,101 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     height: 250,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   infoSection: {
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   restaurantName: {
-    fontFamily: 'Sen_700Bold',
+    fontFamily: "Sen_700Bold",
     fontSize: 26,
-    color: '#474141',
+    color: "#474141",
     marginBottom: 4,
   },
   category: {
-    fontFamily: 'Sen_400Regular',
+    fontFamily: "Sen_400Regular",
     fontSize: 16,
-    color: '#A0A5BA',
+    color: "#A0A5BA",
     marginBottom: 16,
   },
   metaRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 24,
   },
   metaText: {
-    fontFamily: 'Sen_400Regular',
+    fontFamily: "Sen_400Regular",
     fontSize: 14,
-    color: '#474141',
+    color: "#474141",
     marginLeft: 6,
   },
   description: {
-    fontFamily: 'Sen_400Regular',
+    fontFamily: "Sen_400Regular",
     fontSize: 14,
     lineHeight: 22,
-    color: '#474141',
+    color: "#474141",
   },
   impactSection: {
     padding: 24,
   },
   sectionTitle: {
-    fontFamily: 'Sen_700Bold',
+    fontFamily: "Sen_700Bold",
     fontSize: 18,
-    color: '#474141',
+    color: "#474141",
     marginBottom: 16,
   },
   impactCard: {
-    flexDirection: 'row',
-    backgroundColor: '#F5C89B',
+    flexDirection: "row",
+    backgroundColor: "#F5C89B",
     borderRadius: 12,
     padding: 24,
   },
   impactItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   impactValue: {
-    fontFamily: 'Sen_700Bold',
+    fontFamily: "Sen_700Bold",
     fontSize: 24,
-    color: '#474141',
+    color: "#474141",
     marginBottom: 4,
   },
   impactLabel: {
-    fontFamily: 'Sen_400Regular',
+    fontFamily: "Sen_400Regular",
     fontSize: 13,
-    color: '#474141',
-    textAlign: 'center',
+    color: "#474141",
+    textAlign: "center",
   },
   impactDivider: {
     width: 1,
-    backgroundColor: 'rgba(71, 65, 65, 0.2)',
+    backgroundColor: "rgba(71, 65, 65, 0.2)",
     marginHorizontal: 24,
   },
   orderButton: {
-    backgroundColor: '#474141',
+    backgroundColor: "#474141",
     height: 56,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: 24,
     marginTop: 8,
   },
   orderButtonText: {
-    fontFamily: 'Sen_700Bold',
+    fontFamily: "Sen_700Bold",
     fontSize: 16,
-    color: '#ffffff',
+    color: "#ffffff",
   },
 });
-
