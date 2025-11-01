@@ -160,6 +160,7 @@ export default function HomeScreen() {
                 key={category.id}
                 name={category.name}
                 image={category.image}
+                onPress={() => router.push(`/food-list?category=${category.name}`)}
               />
             ))}
           </ScrollView>
@@ -169,7 +170,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Best Matches</Text>
-            <TouchableOpacity onPress={() => router.push("/restaurant-list")}>
+            <TouchableOpacity onPress={() => router.push("/food-list")}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -192,7 +193,7 @@ export default function HomeScreen() {
         {/* View Entire List Button */}
         <TouchableOpacity
           style={styles.viewListButton}
-          onPress={() => router.push("/restaurant-list")}
+          onPress={() => router.push("/food-list")}
         >
           <Text style={styles.viewListButtonText}>View Entire List</Text>
         </TouchableOpacity>
