@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import Calendar from '@/components/Calendar';
 import EventCard from '@/components/EventCard';
 
@@ -28,6 +29,7 @@ const mockEvents = [
 ];
 
 export default function SetNeedScreen() {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 10, 20)); // Nov 20, 2025
 
   const formatSelectedDate = (date: Date) => {
@@ -80,7 +82,10 @@ export default function SetNeedScreen() {
         />
 
         {/* Set Need Button */}
-        <TouchableOpacity style={styles.setNeedButton}>
+        <TouchableOpacity
+          style={styles.setNeedButton}
+          onPress={() => router.push('/set-need-form')}
+        >
           <Text style={styles.setNeedButtonText}>Set Need</Text>
         </TouchableOpacity>
 
