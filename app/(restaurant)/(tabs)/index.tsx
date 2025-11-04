@@ -228,7 +228,10 @@ export default function HomeScreen() {
                   <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.settingsItem}>
+                <TouchableOpacity
+                  style={styles.settingsItem}
+                  onPress={() => router.push("/privacy-policy")}
+                >
                   <Image
                     source={require("@/assets/icons/settings-privacy.png")}
                     style={styles.settingsIcon}

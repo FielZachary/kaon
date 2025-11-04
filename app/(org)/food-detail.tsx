@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCart } from "@/contexts/CartContext";
 
 // Mock data for food listings
 const foodDetails = {
@@ -83,6 +84,21 @@ export default function FoodDetailScreen() {
   const { id } = useLocalSearchParams();
   const food = foodDetails[id as keyof typeof foodDetails] || foodDetails["1"];
   const insets = useSafeAreaInsets();
+  const { addItem } = useCart();
+
+  const handlePurchase = () => {
+    // Add item to cart
+    addItem({
+      id: id as string,
+      name: food.foodName,
+      price: food.discountedPrice,
+      available: food.quantityAvailable,
+      unit: 'kg',
+      image: food.image,
+    });
+    // Navigate to cart
+    router.push('/cart-items');
+  };
 
   const formatExpirationDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -179,7 +195,7 @@ export default function FoodDetailScreen() {
         </View>
 
         {/* Purchase Button */}
-        <TouchableOpacity style={styles.purchaseButton}>
+        <TouchableOpacity style={styles.purchaseButton} onPress={handlePurchase}>
           <Text style={styles.purchaseButtonText}>Purchase Now</Text>
         </TouchableOpacity>
       </ScrollView>
