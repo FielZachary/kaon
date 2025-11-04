@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,11 +13,75 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
+import { useMenuItems } from "@/contexts/MenuItemsContext";
 
 export default function AddItemScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { addMenuItem } = useMenuItems();
   const [priceUnit, setPriceUnit] = useState("P/kg");
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [foodName, setFoodName] = useState("");
+  const [markedDownPrice, setMarkedDownPrice] = useState("");
+  const [pricePerItem, setPricePerItem] = useState("");
+
+  const pickImage = async () => {
+    // Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Please grant camera roll permissions to upload images."
+      );
+      return;
+    }
+
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleAddItem = () => {
+    // Validate form
+    if (!foodName.trim()) {
+      Alert.alert("Error", "Please enter a food item name");
+      return;
+    }
+    if (!markedDownPrice.trim()) {
+      Alert.alert("Error", "Please enter a marked down price");
+      return;
+    }
+    if (!imageUri) {
+      Alert.alert("Error", "Please upload an image");
+      return;
+    }
+
+    // Add the item to the list
+    addMenuItem({
+      name: foodName,
+      price: parseFloat(markedDownPrice),
+      unit: priceUnit,
+      image: { uri: imageUri },
+    });
+
+    // Show success and go back
+    Alert.alert("Success", "Item added successfully!", [
+      {
+        text: "OK",
+        onPress: () => router.back(),
+      },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -41,6 +107,8 @@ export default function AddItemScreen() {
             style={styles.textInput}
             placeholder=""
             placeholderTextColor="#A0A5BA"
+            value={foodName}
+            onChangeText={setFoodName}
           />
 
           {/* Item Marked Down Price */}
@@ -51,6 +119,8 @@ export default function AddItemScreen() {
               placeholder=""
               placeholderTextColor="#A0A5BA"
               keyboardType="numeric"
+              value={markedDownPrice}
+              onChangeText={setMarkedDownPrice}
             />
             <TouchableOpacity style={styles.unitDropdown}>
               <Text style={styles.unitText}>{priceUnit}</Text>
@@ -64,25 +134,35 @@ export default function AddItemScreen() {
             placeholder="P/Item"
             placeholderTextColor="#A0A5BA"
             keyboardType="numeric"
+            value={pricePerItem}
+            onChangeText={setPricePerItem}
           />
 
           {/* Upload Picture Card */}
           <View style={styles.uploadCard}>
             <View style={styles.whiteBox}>
-              <View style={styles.uploadIconContainer}>
-                <Ionicons name="cloud-upload-outline" size={48} color="#FF6B35" />
-              </View>
-              <Text style={styles.uploadTitle}>Upload Picture</Text>
-              <Text style={styles.uploadSubtext}>Supported formats: PNG, JPG</Text>
+              {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+              ) : (
+                <>
+                  <View style={styles.uploadIconContainer}>
+                    <Ionicons name="cloud-upload-outline" size={48} color="#FF6B35" />
+                  </View>
+                  <Text style={styles.uploadTitle}>Upload Picture</Text>
+                  <Text style={styles.uploadSubtext}>Supported formats: PNG, JPG</Text>
+                </>
+              )}
             </View>
             
-            <TouchableOpacity style={styles.uploadButton}>
-              <Text style={styles.uploadButtonText}>UPLOAD PHOTO</Text>
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+              <Text style={styles.uploadButtonText}>
+                {imageUri ? "CHANGE PHOTO" : "UPLOAD PHOTO"}
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Add Button */}
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddItem}>
             <Text style={styles.addButtonText}>Add</Text>
           </TouchableOpacity>
         </View>
@@ -197,6 +277,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     marginBottom: 24,
+  },
+  uploadedImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    resizeMode: "cover",
   },
   uploadIconContainer: {
     marginBottom: 16,
