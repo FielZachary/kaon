@@ -88,20 +88,11 @@ function isCategoryHeader(text: string, confidence: number): boolean {
   return (hasKeyword || isAllCaps) && hasNoPrice && isShort && confidence > 0.7;
 }
 
-function isDescription(text: string, previousWasItem: boolean): boolean {
-  // Descriptions are usually lowercase, longer, and follow an item
-  const isLowerCase = text[0] === text[0].toLowerCase();
-  const isLonger = text.split(" ").length > 5;
-  const hasNoPrice = extractPrice(text) === null;
-  
-  return previousWasItem && isLowerCase && isLonger && hasNoPrice;
-}
+// Removed isDescription - no longer needed with line-by-line parsing
 
 export function parseMenuLayout(ocrResult: any): OCRResult {
   const items: ParsedMenuItem[] = [];
   let currentCategory = "Uncategorized";
-  let lastItemId: string | null = null;
-  let previousWasItem = false;
   
   try {
     // DEBUG: Log what we received
@@ -110,113 +101,157 @@ export function parseMenuLayout(ocrResult: any): OCRResult {
     console.log("📄 PARSER: Pages count:", ocrResult?.pages?.length || 0);
     console.log("📝 PARSER: Paragraphs count:", ocrResult?.paragraphs?.length || 0);
     
-    // Extract pages and paragraphs from Azure result
+    // Extract pages from Azure result
     const pages = ocrResult.pages || [];
-    const paragraphs = ocrResult.paragraphs || [];
     
     // DEBUG: Show first few lines of text if available
     if (pages.length > 0 && pages[0].lines) {
-      console.log("📖 PARSER: First 5 lines detected:");
-      pages[0].lines.slice(0, 5).forEach((line: any, i: number) => {
+      console.log("📖 PARSER: First 10 lines detected:");
+      pages[0].lines.slice(0, 10).forEach((line: any, i: number) => {
         console.log(`  ${i+1}. "${line.content}" (confidence: ${line.confidence || 0})`);
       });
     }
     
-    // Process each paragraph (Azure groups related lines)
-    for (const para of paragraphs) {
-      const text = para.content || "";
-      const confidence = para.confidence || 0;
-      const boundingRegion = para.boundingRegions?.[0];
+    // STRATEGY 1: Line-by-line aggressive parsing (catches most items)
+    console.log("🔥 PARSER: Using line-by-line aggressive strategy...");
+    
+    for (const page of pages) {
+      const lines = page.lines || [];
+      let pendingItemName: string | null = null;
+      let pendingConfidence = 0;
       
-      if (!text.trim()) continue;
-      
-      // Check if it's a category header
-      if (isCategoryHeader(text, confidence)) {
-        currentCategory = text.trim();
-        previousWasItem = false;
-        continue;
-      }
-      
-      // Check if it's a description for the previous item
-      if (isDescription(text, previousWasItem) && lastItemId) {
-        const itemIndex = items.findIndex((item) => item.id === lastItemId);
-        if (itemIndex !== -1) {
-          items[itemIndex].description = text.trim();
-        }
-        previousWasItem = false;
-        continue;
-      }
-      
-      // Try to extract price
-      const price = extractPrice(text);
-      
-      if (price !== null) {
-        // This line has a price, treat as menu item
-        const itemName = removePrice(text);
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const text = line.content || "";
+        const confidence = line.confidence || 0;
+        const polygon = line.polygon || [];
         
-        if (itemName.length > 2) {
-          const itemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        if (!text.trim()) continue;
+        
+        // Check if it's a category header
+        if (isCategoryHeader(text, confidence)) {
+          currentCategory = text.trim();
+          console.log(`📁 PARSER: Found category: "${currentCategory}"`);
+          pendingItemName = null;
+          continue;
+        }
+        
+        // Try to extract price from this line
+        const price = extractPrice(text);
+        
+        if (price !== null) {
+          // Price found on this line
+          const itemName = removePrice(text).trim();
           
-          items.push({
-            id: itemId,
-            category: currentCategory,
-            name: itemName,
-            price,
-            confidence,
-            boundingBox: boundingRegion?.polygon
-              ? {
-                  x: Math.min(...boundingRegion.polygon.filter((_, i) => i % 2 === 0)),
-                  y: Math.min(...boundingRegion.polygon.filter((_, i) => i % 2 === 1)),
-                  width:
-                    Math.max(...boundingRegion.polygon.filter((_, i) => i % 2 === 0)) -
-                    Math.min(...boundingRegion.polygon.filter((_, i) => i % 2 === 0)),
-                  height:
-                    Math.max(...boundingRegion.polygon.filter((_, i) => i % 2 === 1)) -
-                    Math.min(...boundingRegion.polygon.filter((_, i) => i % 2 === 1)),
-                }
-              : undefined,
-          });
+          // Case 1: Item name and price on SAME line
+          if (itemName.length > 2) {
+            items.push({
+              id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              category: currentCategory,
+              name: itemName,
+              price,
+              confidence,
+              boundingBox: polygon.length >= 8
+                ? {
+                    x: Math.min(polygon[0], polygon[2], polygon[4], polygon[6]),
+                    y: Math.min(polygon[1], polygon[3], polygon[5], polygon[7]),
+                    width: Math.max(polygon[0], polygon[2], polygon[4], polygon[6]) -
+                           Math.min(polygon[0], polygon[2], polygon[4], polygon[6]),
+                    height: Math.max(polygon[1], polygon[3], polygon[5], polygon[7]) -
+                            Math.min(polygon[1], polygon[3], polygon[5], polygon[7]),
+                  }
+                : undefined,
+            });
+            console.log(`✅ PARSER: Item found: "${itemName}" - ₱${price}`);
+            pendingItemName = null;
+          }
+          // Case 2: Price on this line, item name was on PREVIOUS line
+          else if (pendingItemName && pendingItemName.length > 2) {
+            items.push({
+              id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              category: currentCategory,
+              name: pendingItemName,
+              price,
+              confidence: (confidence + pendingConfidence) / 2,
+            });
+            console.log(`✅ PARSER: Item found (multi-line): "${pendingItemName}" - ₱${price}`);
+            pendingItemName = null;
+          }
+        } else {
+          // No price on this line, might be item name for next line
+          const cleanText = text.trim();
           
-          lastItemId = itemId;
-          previousWasItem = true;
+          // Skip if it looks like a header/description
+          if (cleanText.length > 2 && cleanText.length < 100 && !cleanText.match(/^[\d\s\-\.]+$/)) {
+            pendingItemName = cleanText;
+            pendingConfidence = confidence;
+          }
         }
       }
     }
     
-    // Fallback: if no items found, try processing all lines
-    if (items.length === 0) {
-      for (const page of pages) {
-        for (const line of page.lines || []) {
-          const text = line.content || "";
-          const price = extractPrice(text);
+    // STRATEGY 2: Handle split items (item...dots...price in table format)
+    console.log("🔥 PARSER: Checking for dotted-leader items...");
+    for (const page of pages) {
+      for (const line of page.lines || []) {
+        const text = line.content || "";
+        
+        // Match "Item name...........₱50" patterns
+        const dottedMatch = text.match(/^(.+?)\s*\.{3,}\s*(.+)$/);
+        if (dottedMatch) {
+          const [, itemPart, pricePart] = dottedMatch;
+          const price = extractPrice(pricePart);
           
-          if (price !== null) {
-            const itemName = removePrice(text);
-            if (itemName.length > 2) {
+          if (price && itemPart.trim().length > 2) {
+            // Check if we already added this (avoid duplicates)
+            const exists = items.some(
+              (item) => item.name === itemPart.trim() && item.price === price
+            );
+            
+            if (!exists) {
               items.push({
                 id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                category: "Uncategorized",
-                name: itemName,
+                category: currentCategory,
+                name: itemPart.trim(),
                 price,
-                confidence: line.confidence || 0.5,
+                confidence: line.confidence || 0.8,
               });
+              console.log(`✅ PARSER: Dotted item: "${itemPart.trim()}" - ₱${price}`);
             }
           }
         }
       }
     }
     
+    // STRATEGY 3: Deduplicate items (same name + price)
+    const uniqueItems: ParsedMenuItem[] = [];
+    const seen = new Set<string>();
+    
+    for (const item of items) {
+      const key = `${item.name.toLowerCase()}_${item.price}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueItems.push(item);
+      }
+    }
+    
     // DEBUG: Log results
-    console.log(`✅ PARSER: Found ${items.length} menu items`);
-    if (items.length > 0) {
-      console.log("📋 PARSER: Sample items:", items.slice(0, 3).map(item => `${item.name} - ₱${item.price}`));
+    console.log(`✅ PARSER: Found ${uniqueItems.length} unique menu items (${items.length - uniqueItems.length} duplicates removed)`);
+    if (uniqueItems.length > 0) {
+      console.log("📋 PARSER: Sample items:", uniqueItems.slice(0, 5).map(item => `${item.name} - ₱${item.price}`));
     } else {
       console.log("❌ PARSER: NO ITEMS FOUND! Check if image has prices like ₱50, PHP 50, etc.");
     }
     
+    // Extract all text for rawText
+    const allText = pages
+      .flatMap((page: any) => page.lines || [])
+      .map((line: any) => line.content)
+      .join("\n");
+    
     return {
-      items,
-      rawText: paragraphs.map((p: any) => p.content).join("\n"),
+      items: uniqueItems,
+      rawText: allText,
       pageCount: pages.length,
     };
   } catch (error) {
