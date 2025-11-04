@@ -1,24 +1,54 @@
+import CategoryButton from '@/components/CategoryButton';
+import FoodItemCard from '@/components/FoodItemCard';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import FoodItemCard from '@/components/FoodItemCard';
-import CategoryButton from '@/components/CategoryButton';
 
-// Mock data for categories
+// Mock data for categories (use same image links as Home screen)
 const categories = [
-  { id: '1', name: 'Dessert', image: require('@/assets/images/icon.png') },
-  { id: '2', name: 'Savory', image: require('@/assets/images/icon.png') },
-  { id: '3', name: 'Beverage', image: require('@/assets/images/icon.png') },
-  { id: '4', name: 'Filipino', image: require('@/assets/images/icon.png') },
-  { id: '5', name: 'Cafe', image: require('@/assets/images/icon.png') },
+  {
+    id: '1',
+    name: 'Dessert',
+    image: {
+      uri: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=400&fit=crop',
+    },
+  },
+  {
+    id: '2',
+    name: 'Savory',
+    image: {
+      uri: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop',
+    },
+  },
+  {
+    id: '3',
+    name: 'Beverage',
+    image: {
+      uri: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=400&fit=crop',
+    },
+  },
+  {
+    id: '4',
+    name: 'Filipino',
+    image: {
+      uri: 'https://images.unsplash.com/photo-1580554530778-ca36943938b2?w=400&h=400&fit=crop',
+    },
+  },
+  {
+    id: '5',
+    name: 'Cafe',
+    image: {
+      uri: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
+    },
+  },
 ];
 
 // Mock data for available food
@@ -34,7 +64,7 @@ const availableFood = [
   {
     id: '2',
     restaurantName: "Shakey's",
-    restaurantLogo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4qLYvqVqZ3KqxqYqQxY9gQYvGQqHqHYqZqA&s',
+    restaurantLogo: 'https://cdn.manilastandard.net/wp-content/uploads/2024/05/Shakeys.png',
     foodDescription: 'Vegetable Fritters with Egg Beef Pares',
     goodUntil: new Date('2025-05-11T12:20:00'),
     category: 'Savory',
@@ -42,7 +72,7 @@ const availableFood = [
   {
     id: '3',
     restaurantName: 'Manam',
-    restaurantLogo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxqYvQxY9gQYvGQqHqHYqZqA&s',
+    restaurantLogo: 'https://momentgroup.ph/assets/Uploads/manam-logo-updated-png.png',
     foodDescription: 'Sinigang Beef Pares',
     goodUntil: new Date('2025-10-12T12:20:00'),
     category: 'Filipino',
