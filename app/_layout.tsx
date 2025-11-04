@@ -3,6 +3,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts, Sen_400Regular, Sen_700Bold } from '@expo-google-fonts/sen';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { initOCR } from '@/services/ocr/init';
 
 export { ErrorBoundary } from "expo-router";
 
@@ -20,6 +21,11 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // Initialize OCR service on app start
+  useEffect(() => {
+    initOCR();
+  }, []);
 
   if (!fontsLoaded) {
     return null;

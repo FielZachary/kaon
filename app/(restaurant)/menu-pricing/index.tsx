@@ -102,6 +102,16 @@ export default function MenuPricingScreen() {
           <Text style={styles.sectionTitle}>Set Item Prices</Text>
           <Text style={styles.subtitle}>Upload Or Set Menu With Prices</Text>
 
+          {/* Import Menu Button */}
+          <TouchableOpacity
+            style={styles.importButton}
+            onPress={() => router.push("/menu-pricing/import-menu")}
+          >
+            <Ionicons name="camera-outline" size={20} color="#FF7622" />
+            <Text style={styles.importButtonText}>Import from Photo</Text>
+            <Ionicons name="chevron-forward" size={20} color="#FF7622" />
+          </TouchableOpacity>
+
           <View style={styles.grid}>
             {menuItems.map((item) => (
               <View key={item.id} style={styles.card}>
@@ -247,7 +257,26 @@ const styles = StyleSheet.create({
     fontFamily: "Sen_400Regular",
     fontSize: 14,
     color: "#757575",
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  importButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFF5F0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#FF7622",
+  },
+  importButtonText: {
+    flex: 1,
+    fontFamily: "Sen_700Bold",
+    fontSize: 14,
+    color: "#FF7622",
+    marginLeft: 10,
   },
   grid: {
     flexDirection: "row",

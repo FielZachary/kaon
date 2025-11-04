@@ -9,11 +9,11 @@ import {
   Image,
   Linking,
   Animated,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { useOrders, Order } from "@/contexts/OrdersContext";
 
 export default function OrderTrackingScreen() {
@@ -62,50 +62,71 @@ export default function OrderTrackingScreen() {
     Linking.openURL(`sms:${phoneNumber}`);
   };
 
+  // Lazy-load native map components to avoid web import errors
+  let MapViewComp: any = null;
+  let MarkerComp: any = null;
+  let PolylineComp: any = null;
+  let PROVIDER_DEFAULT_CONST: any = null;
+  if (Platform.OS !== "web") {
+    const RNMaps = require("react-native-maps");
+    MapViewComp = RNMaps.default;
+    MarkerComp = RNMaps.Marker;
+    PolylineComp = RNMaps.Polyline;
+    PROVIDER_DEFAULT_CONST = RNMaps.PROVIDER_DEFAULT;
+  }
+
   return (
     <View style={styles.container}>
-      {/* Map */}
-      <MapView
-        style={styles.map}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={{
-          latitude: (order.originLatLng.latitude + order.destLatLng.latitude) / 2,
-          longitude: (order.originLatLng.longitude + order.destLatLng.longitude) / 2,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-      >
-        {/* Route Polyline */}
-        <Polyline
-          coordinates={order.pathCoordinates}
-          strokeColor="#FF7622"
-          strokeWidth={4}
-        />
+      {/* Map (native only). On web, show a placeholder card. */}
+      {Platform.OS === "web" ? (
+        <View style={[styles.map, styles.webMapPlaceholder]}>
+          <Ionicons name="map-outline" size={28} color="#A0A5BA" />
+          <Text style={styles.webMapText}>Live map not available on web preview.</Text>
+          <Text style={styles.webMapTextSmall}>Open this screen on iOS/Android to see real-time tracking.</Text>
+        </View>
+      ) : (
+        <MapViewComp
+          style={styles.map}
+          provider={PROVIDER_DEFAULT_CONST}
+          initialRegion={{
+            latitude: (order.originLatLng.latitude + order.destLatLng.latitude) / 2,
+            longitude: (order.originLatLng.longitude + order.destLatLng.longitude) / 2,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+        >
+          {/* Route Polyline */}
+          <PolylineComp
+            coordinates={order.pathCoordinates}
+            strokeColor="#FF7622"
+            strokeWidth={4}
+          />
 
-        {/* Origin (Restaurant) */}
-        <Marker coordinate={order.originLatLng} title={order.restaurantName}>
-          <View style={styles.markerRestaurant}>
-            <Ionicons name="restaurant" size={20} color="#FFFFFF" />
-          </View>
-        </Marker>
+          {/* Origin (Restaurant) */}
+          <MarkerComp coordinate={order.originLatLng} title={order.restaurantName}>
+            <View style={styles.markerRestaurant}>
+              <Ionicons name="restaurant" size={20} color="#FFFFFF" />
+            </View>
+          </MarkerComp>
 
-        {/* Destination (Org) */}
-        <Marker coordinate={order.destLatLng} title="Delivery Location">
-          <View style={styles.markerDestination}>
-            <Ionicons name="location" size={20} color="#FFFFFF" />
-          </View>
-        </Marker>
+          {/* Destination (Org) */}
+          <MarkerComp coordinate={order.destLatLng} title="Delivery Location">
+            <View style={styles.markerDestination}>
+              <Ionicons name="location" size={20} color="#FFFFFF" />
+            </View>
+          </MarkerComp>
 
-        {/* Courier (Live) */}
-        <Marker coordinate={order.courier.currentLatLng} title={order.courier.name}>
-          <View style={styles.markerCourier}>
-            <Image
-              source={{ uri: order.courier.avatar }}
-              style={styles.courierAvatar}
-            />
-          </View>
-        </Marker>
-      </MapView>
+          {/* Courier (Live) */}
+          <MarkerComp coordinate={order.courier.currentLatLng} title={order.courier.name}>
+            <View style={styles.markerCourier}>
+              <Image
+                source={{ uri: order.courier.avatar }}
+                style={styles.courierAvatar}
+              />
+            </View>
+          </MarkerComp>
+        </MapViewComp>
+      )}
 
       {/* Header Overlay */}
       <SafeAreaView style={[styles.headerOverlay, { paddingTop: insets.top }]}>
@@ -231,6 +252,26 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  webMapPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F8F8",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+    paddingBottom: 24,
+  },
+  webMapText: {
+    marginTop: 8,
+    fontFamily: "Sen_700Bold",
+    fontSize: 14,
+    color: "#474141",
+  },
+  webMapTextSmall: {
+    marginTop: 4,
+    fontFamily: "Sen_400Regular",
+    fontSize: 12,
+    color: "#A0A5BA",
   },
   headerOverlay: {
     position: "absolute",

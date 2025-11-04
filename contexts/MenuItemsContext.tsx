@@ -11,6 +11,7 @@ export interface MenuItem {
 interface MenuItemsContextType {
   menuItems: MenuItem[];
   addMenuItem: (item: Omit<MenuItem, "id">) => void;
+  bulkAddMenuItems: (items: Omit<MenuItem, "id">[]) => void;
   deleteMenuItem: (id: string) => void;
 }
 
@@ -64,12 +65,20 @@ export function MenuItemsProvider({ children }: { children: ReactNode }) {
     setMenuItems((prev) => [...prev, newItem]);
   };
 
+  const bulkAddMenuItems = (items: Omit<MenuItem, "id">[]) => {
+    const newItems: MenuItem[] = items.map((item, index) => ({
+      ...item,
+      id: `${Date.now()}-${index}`,
+    }));
+    setMenuItems((prev) => [...prev, ...newItems]);
+  };
+
   const deleteMenuItem = (id: string) => {
     setMenuItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
-    <MenuItemsContext.Provider value={{ menuItems, addMenuItem, deleteMenuItem }}>
+    <MenuItemsContext.Provider value={{ menuItems, addMenuItem, bulkAddMenuItems, deleteMenuItem }}>
       {children}
     </MenuItemsContext.Provider>
   );
