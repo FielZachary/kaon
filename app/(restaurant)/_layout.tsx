@@ -4,6 +4,7 @@ export default function RestaurantLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="menu-pricing" />
     </Stack>
   );
 }

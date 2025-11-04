@@ -2,7 +2,11 @@ import RestaurantCard from "@/components/RestaurantCard";
 import StatCard from "@/components/StatCard";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import {
+  Animated,
+  Dimensions,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,9 +41,30 @@ const restaurants = [
   },
 ];
 
+const DRAWER_WIDTH = Dimensions.get("window").width * 0.75;
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+
+  const openDrawer = () => {
+    setIsDrawerOpen(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(slideAnim, {
+      toValue: -DRAWER_WIDTH,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setIsDrawerOpen(false));
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -50,7 +75,7 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.menuButton}>
+          <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
             <Ionicons name="menu" size={24} color="#474141" />
           </TouchableOpacity>
 
@@ -145,6 +170,113 @@ export default function HomeScreen() {
         {/* Bottom spacing for tab bar */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Settings Drawer */}
+      {isDrawerOpen && (
+        <>
+          <TouchableOpacity
+            style={styles.drawerOverlay}
+            activeOpacity={1}
+            onPress={closeDrawer}
+          />
+          <Animated.View
+            style={[
+              styles.drawer,
+              {
+                transform: [{ translateX: slideAnim }],
+                paddingTop: insets.top,
+              },
+            ]}
+          >
+            {/* Drawer Header */}
+            <View style={styles.drawerHeader}>
+              <TouchableOpacity style={styles.backButton} onPress={closeDrawer}>
+                <Ionicons name="arrow-back" size={24} color="#474141" />
+              </TouchableOpacity>
+              <Text style={styles.drawerTitle}>Settings</Text>
+            </View>
+
+            {/* Drawer Content */}
+            <ScrollView style={styles.drawerContent}>
+              {/* Account Section */}
+              <Text style={styles.sectionLabel}>Account</Text>
+              <View style={styles.settingsSection}>
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-edit-profile.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Edit Profile</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-security.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Security</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-notifications.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Notifications</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-privacy.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Privacy</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Menu Options Section */}
+              <Text style={styles.sectionLabel}>Menu Options</Text>
+              <View style={styles.settingsSection}>
+                <TouchableOpacity
+                  style={styles.settingsItem}
+                  onPress={() => router.push("/menu-pricing")}
+                >
+                  <Image
+                    source={require("@/assets/icons/settings-edit-menu-pricing.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Edit Menu Pricing</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-help-and-support.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>Help & Support</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.settingsItem}>
+                  <Image
+                    source={require("@/assets/icons/settings-food-safety-policies.png")}
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsItemText}>
+                    Food Safety Policies
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color="#A0A5BA" />
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </Animated.View>
+        </>
+      )}
     </View>
   );
 }
@@ -304,5 +436,82 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 20,
+  },
+  drawerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 999,
+  },
+  drawer: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: DRAWER_WIDTH,
+    backgroundColor: "#F5F5F5",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 2,
+      height: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  drawerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  backButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  drawerTitle: {
+    fontFamily: "Sen_700Bold",
+    fontSize: 24,
+    color: "#474141",
+  },
+  drawerContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
+  sectionLabel: {
+    fontFamily: "Sen_700Bold",
+    fontSize: 14,
+    color: "#474141",
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  settingsSection: {
+    backgroundColor: "#EFEFEF",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  settingsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  settingsIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  settingsItemText: {
+    flex: 1,
+    fontFamily: "Sen_700Bold",
+    fontSize: 16,
+    color: "#474141",
   },
 });
